@@ -872,7 +872,7 @@ namespace ts {
         {
             name: "noImplicitUseStrict",
             type: "boolean",
-            affectsSemanticDiagnostics: true,
+            affectsEmit: true,
             category: Diagnostics.Advanced_Options,
             description: Diagnostics.Do_not_emit_use_strict_directives_in_module_output
         },

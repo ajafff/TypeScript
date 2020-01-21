@@ -1162,6 +1162,65 @@ export function f(p: C) { return p; }`
 
         verifyTscWatch({
             scenario,
+            subScenario: "updates errors when strictNullChecks changes",
+            commandLineArgs: ["-w"],
+            sys: () => {
+                const aFile: File = {
+                    path: `${projectRoot}/a.ts`,
+                    content: `declare function foo(): null | { hello: any };
+foo().hello`
+                };
+                const config: File = {
+                    path: `${projectRoot}/tsconfig.json`,
+                    content: JSON.stringify({ compilerOptions: {} })
+                };
+                return createWatchedSystem([aFile, config, libFile], { currentDirectory: projectRoot });
+            },
+            changes: [
+                sys => {
+                    sys.writeFile(`${projectRoot}/tsconfig.json`, JSON.stringify({ compilerOptions: { strictNullChecks: true } }));
+                    sys.runQueuedTimeoutCallbacks();
+                    return "Enable strict null checks";
+                },
+                sys => {
+                    sys.writeFile(`${projectRoot}/tsconfig.json`, JSON.stringify({ compilerOptions: { strict: true, alwaysStrict: false } })); // Avoid changing 'alwaysStrict' or must re-bind
+                    sys.runQueuedTimeoutCallbacks();
+                    return "Set always strict false";
+                },
+                sys => {
+                    sys.writeFile(`${projectRoot}/tsconfig.json`, JSON.stringify({ compilerOptions: {} }));
+                    sys.runQueuedTimeoutCallbacks();
+                    return "Disable strict";
+                },
+            ]
+        });
+
+        verifyTscWatch({
+            scenario,
+            subScenario: "updates emit when noImplicitUseStrict changes",
+            commandLineArgs: ["-w"],
+            sys: () => {
+                const aFile: File = {
+                    path: `/a.ts`,
+                    content: `export let v = 1;`
+                };
+                const config: File = {
+                    path: `/tsconfig.json`,
+                    content: JSON.stringify({ compilerOptions: {} })
+                };
+                return createWatchedSystem([aFile, config, libFile]);
+            },
+            changes: [
+                sys => {
+                    sys.writeFile(`/tsconfig.json`, JSON.stringify({ compilerOptions: { noImplicitUseStrict: true } }));
+                    sys.runQueuedTimeoutCallbacks();
+                    return "Enable noImplicitUseStrict";
+                },
+            ]
+        });
+
+        verifyTscWatch({
+            scenario,
             subScenario: "updates errors when ambient modules of program changes",
             commandLineArgs: ["-w"],
             sys: () => {
